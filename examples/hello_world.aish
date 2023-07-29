@@ -1,0 +1,7 @@
+#!/usr/bin/aish -p
+# Example with parameter $1.
+# Also using paragraph mode, so a blank line submits instead of just \n.
+# Paragraph mode REQUIRES a double return at the end.
+say hello world to $1
+and please tell them what a fine hat they are wearing
+

@@ -1,0 +1,3 @@
+#!/usr/bin/aish -x
+
+use convert to make a $1 thumbnail copy of every image in the current directory. please don't replace the image.

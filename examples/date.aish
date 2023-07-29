@@ -1,0 +1,5 @@
+#!/home/jboero/bin/aish
+# Implicit bison mode since we didn't set -m
+
+#show the current time
+show the current time in Istanbul in 24h format and show timezone
