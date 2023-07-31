@@ -20,10 +20,10 @@ int shellgpt(const string &cmd)
 	Json::Value thread, eq, message, response;
 	Json::FastWriter fastWriter;
 	static string apiorg = getenvsafe("OPENAI_ORG");
-    static string apikey = getenvsafe("OPENAI_API_KEY");
+	static string apikey = getenvsafe("OPENAI_API_KEY");
 	string sname;
 
-    unsetenv("OPENAI_API_KEY");
+	unsetenv("OPENAI_API_KEY");
 	try
 	{
 		if (thread.empty())
@@ -84,9 +84,9 @@ int chatgpt(const string &cmd)
 	Json::Value thread, eq, message, response;
 	Json::FastWriter fastWriter;
 	static string apiorg = getenvsafe("OPENAI_ORG");
-    static string apikey = getenvsafe("OPENAI_API_KEY");
+	static string apikey = getenvsafe("OPENAI_API_KEY");
 
-    unsetenv("OPENAI_API_KEY");
+	unsetenv("OPENAI_API_KEY");
 	try
 	{
 		if (thread.empty())
