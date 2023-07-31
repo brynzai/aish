@@ -38,7 +38,7 @@ void signals(int sig_num) {}
 int main (int argc, char **argv)
 {
 	int res;
-	string cmd, smode;
+	string cmd, smode = "shellbard";
 	string stemp = getenvsafe("AISH_TEMP");
 	stringstream buffer;
 	istream *input = &cin;
@@ -98,6 +98,11 @@ Environment variabes required for Bard:
 
         break;
     }
+
+	// Make sure to warn people about unexpected AI shell behaviour.
+	// Future maybe we can offer a bypass for this.
+	if (regex_match(smode, (regex)".*shell.*"))
+		cerr << YELLOW << "WARNING use AI for shell carefully and at you own risk." << RESET << endl;
 
 	ps1 = "\e[0;33m"+smode+"🙂\033[0m> ";
 	// Did we specify a file after args?
@@ -175,11 +180,6 @@ Environment variabes required for Bard:
 			}
 
 			if (debug) cerr << GREY << smode << ": " << cmd << RESET << endl;
-
-			// Make sure to warn people about unexpected AI shell behaviour.
-			// Future maybe we can offer a bypass for this.
-			if (regex_match(smode, (regex)".*shell.*"))
-				cerr << YELLOW << "WARNING use AI for shell carefully and at you own risk." << RESET << endl;
 
 			// Ugly but simple.
 			switch (mode)
