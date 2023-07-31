@@ -7,30 +7,29 @@ Version:        0.1.0
 Release:        1%{?dist}
 Summary:        AI shell is a CLI for AI to write and script in plain language.
 License:        MPL
-Source0:        ~/code/aish
+Source0:        https://github.com/brynzai/aish/archive/refs/heads/v%{version}.zip
 BuildRequires:  coreutils unzip make jsoncpp-devel libcurl-devel
 Requires(pre):  shadow-utils
-Requires(post): systemd libcap
+Requires(post): libcurl jsoncpp
 Requires(preun):        systemd
 Requires(postun):       systemd
-URL:            https://www.github.com/jboero/aish
+URL:            https://www.github.com/brynzai/aish
 
 %define debug_package %{nil}
 %define source_date_epoch_from_changelog 0
 
 %description
-AI Shell is a shell that takes your statements in plain language and 
-proxies them via AI. Current support includes Google Bard and OpenAI GPT-3.
+AI Shell is a shell that takes your statements in plain language and  proxies 
+them via AI. Current support includes Google Bard and OpenAI GPT-3. Warning use 
+this at your own risk and not in production. AI can produce unexpected results.
 
 %prep
+%autosetup -c %{name}-%{version}
 
 %build
-cd %{name}-%{version}/
-make
+make -j
 
 %install
-cd %{name}-%{version}/
-
 mkdir -p %{buildroot}%{_bindir}/
 cp -p %{name} %{buildroot}%{_bindir}/
 
@@ -46,8 +45,6 @@ rm -rf %{_builddir}/*
 %post
 
 %preun
-%systemd_preun %{name}.service
 %postun
-%systemd_postun_with_restart %{name}.service
 
 %changelog
