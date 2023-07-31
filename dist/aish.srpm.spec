@@ -27,6 +27,8 @@ this at your own risk and not in production. AI can produce unexpected results.
 %autosetup -c %{name}-%{version}
 
 %build
+pwd
+ls
 make -j
 
 %install
