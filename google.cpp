@@ -31,7 +31,7 @@ int shellbard(const string &cmd)
 	if (!getenv("CLOUDSDK_CORE_PROJECT") || !getenv("GOOGLE_APPLICATION_CREDENTIALS"))
 	{
 		cerr << RED << "ERROR: missing environment variable. Please define: "
-			<< "CLOUDSDK_CORE_PROJECT, GOOGLE_APPLICATION_CREDENTIALS, and try again." 
+			<< "CLOUDSDK_CORE_PROJECT and your auth token GOOGLE_APPLICATION_CREDENTIALS and try again." 
 			<< RESET << endl;
 		return 1;
 	}
@@ -43,9 +43,9 @@ int shellbard(const string &cmd)
 			// C++11 literals are great but tricky when inserting values.
 			string initial = R"JSON({
 			 "instances": [{"prefix": "Please write me a bash script to do the following: )JSON" 
-			 + regex_replace(cmd, (regex)"\"", "\\\"") + R"JSON("}
-			{"context": "You are a chatbot with access to cloud resources using the oidc token TOKEN.",
-				"}],  "parameters": {"temperature": 0.2, "maxOutputTokens": 2048}})JSON";
+			 + regex_replace(cmd, (regex)"\"", "\\\"") + R"JSON("},
+			{"context": "You are a chatbot with access to cloud resources using the oidc token TOKEN."}],
+			  "parameters": {"temperature": 0.2, "maxOutputTokens": 2048}})JSON";
 
 			initial = regex_replace(initial, (regex)"TOKEN", getenvsafe("GOOGLE_APPLICATION_CREDENTIALS"));
 
