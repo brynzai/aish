@@ -44,7 +44,10 @@ int shellgpt(const string &cmd)
 
 		int httpCode = mycurljson(gpturl, response, "POST", headers, payload);
 		if (httpCode != 200)
+		{
 			cerr << YELLOW << "WARN: HTTP " << httpCode << ": " << response << RESET << endl;
+			return httpCode;
+		}
 
 		{
 			using namespace chrono;
@@ -55,7 +58,8 @@ int shellgpt(const string &cmd)
 		
 		// This is ugly but seems to be the best way to extract markdown.
 		smatch match;
-		if (regex_search(scr, match, (regex)"```(.*)```"))
+		regex reg("```(.*)```", regex::extended);
+		if (regex_search(scr, match, reg))
 			scr = match[1];
 		
 		ofstream script(sname);
