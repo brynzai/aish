@@ -24,10 +24,9 @@ them via AI. Current support includes Google Bard and OpenAI GPT-3. Warning use
 this at your own risk and not in production. AI can produce unexpected results.
 
 %prep
-%autosetup -c %{name}-%{version}
+%autosetup
 
 %build
-pwd
 ls
 make -j
 
