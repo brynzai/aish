@@ -77,7 +77,10 @@ int shellbard(const string &cmd)
 		// This will actually be zero if everything is OK (200).
 		httpCode = mycurljson(url, response, "POST", headers, payload);
 		if (httpCode)
+		{
 			cerr << YELLOW << "WARN: HTTP " << httpCode << ": " << response << RESET << endl;
+			return httpCode;
+		}
 
 		scr = response["predictions"][0]["content"].asString();
 
@@ -89,7 +92,8 @@ int shellbard(const string &cmd)
 
 		// This is ugly but seems to be the best way to extract markdown.
 		smatch match;
-		if (regex_search(scr, match, (regex)"```(.*)```"))
+		regex reg("```(.*)```", regex::extended);
+		if (regex_search(scr, match, reg))
 			scr = match[1];
 		
 		ofstream script(sname);
