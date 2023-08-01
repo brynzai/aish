@@ -62,7 +62,8 @@ int shellbard(const string &cmd)
 
 		// Forget JsonValue building. This is just simpler.
 		string payload = (string)"{\"instances\": [{\"prefix\": \"" 
-		 + "Please write me a bash script to do the following: " + regex_replace(cmd, (regex)"\"", "\\\"")
+		 + "Please write me a bash script with top line shebang to do the following: "
+		 + regex_replace(cmd, (regex)"\"", "\\\"")
 		 + "\"}],  \"parameters\": {\"temperature\": 0.2, \"maxOutputTokens\": 2048}}";
 
 		// As of 16-JUL-2023, this only seems to be available in us-central1
@@ -87,12 +88,12 @@ int shellbard(const string &cmd)
 		{
 			using namespace chrono;
 			milliseconds ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-			sname = getenvsafe("HOME") + "/.aish/gpt_" + to_string(ms.count()) + ".sh";
+			sname = getenvsafe("HOME") + "/.aish/bard_" + to_string(ms.count()) + ".sh";
 		}
 
 		// This is ugly but seems to be the best way to extract markdown.
 		smatch match;
-		regex reg("```(.*)```", regex::extended);
+		regex reg("```\n?(.*)```", regex::extended);
 		if (regex_search(scr, match, reg))
 			scr = match[1];
 		
