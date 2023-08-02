@@ -46,8 +46,15 @@ Shellbard is the default mode and will translate your input to local shell code 
 The shell supports scripts. So you can write a script in human language:
 
 ```
-#!/usr/bin/aish -m shellgpt
+#!/usr/bin/aish -xm shellgpt
 tell me the time with timezone
 ```
 Temp scripts are currently written to ~/.aish/ which is hard-coded to my own user unfortunately. Just trying to get initial commits.
-More to come soon..
+Check the examples directory for more.
+```
+#!/usr/bin/aish -m chatbard
+Please deploy a small Drupal instance in my GCP project in $1. Use Cloud Run if possible.
+```
+Running these scripts with parameters becomes simple:
+```
+./drupal.aish London
