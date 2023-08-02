@@ -1,4 +1,4 @@
-#!/usr/bin/aish -p
+#!/usr/bin/aish -pm shellgpt
 # Example with parameter $1.
 # Also using paragraph mode, so a blank line submits instead of just \n.
 # Paragraph mode REQUIRES a double return at the end.

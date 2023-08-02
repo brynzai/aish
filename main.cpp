@@ -89,9 +89,9 @@ int main (int argc, char **argv)
   -m mode is one of: chatbard|chatgpt|shellbard|shellgpt and defaults to shellbard.
 Environment variables required for Bard: CLOUDSDK_CORE_PROJECT, GOOGLE_APPLICATION_CREDENTIALS
 Environment variables required for GPT: OPENAI_ORG, OPENAI_API_KEY
-
-  -p is paragraph mode: Use a blank line to submit.
-  -x is trace mode similar to bash.
+  -v shows version and quits.
+  -p paragraph mode: Use a blank line to submit.
+  -x trace mode similar to bash.
 WARNING use AI for shell carefully and at you own risk.)USAGE" << endl;
             return 0;
 			break;

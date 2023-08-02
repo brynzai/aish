@@ -43,7 +43,7 @@ int shellgpt(const string &cmd)
 		//cout << payload << endl;
 
 		int httpCode = mycurljson(gpturl, response, "POST", headers, payload);
-		if (httpCode != 200)
+		if (httpCode)
 		{
 			cerr << YELLOW << "WARN: HTTP " << httpCode << ": " << response << RESET << endl;
 			return httpCode;

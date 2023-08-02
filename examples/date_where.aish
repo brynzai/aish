@@ -1,0 +1,2 @@
+#!/usr/bin/aish
+show the current time in $1 in 24h format and include the timezone
