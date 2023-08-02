@@ -67,7 +67,7 @@ int shellgpt(const string &cmd)
 		script.close();
 
 		// Add -x if we added a runtime -d for debug.
-		sname = (string)"/bin/bash " + (debug ? "-x ":"") + sname;
+		sname = (string)"/usr/bin/env bash " + (debug ? "-x ":"") + sname;
 		system(sname.c_str());
 	}
 	catch (const exception& e)
