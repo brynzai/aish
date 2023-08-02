@@ -53,8 +53,17 @@ Temp scripts are currently written to ~/.aish/ which is hard-coded to my own use
 Check the examples directory for more.
 ```
 #!/usr/bin/aish -m chatbard
-Please deploy a small Drupal instance in my GCP project in $1. Use Cloud Run if possible.
+Please deploy a small Drupal instance in my GCP project in $1. Use Cloud Run if possible. Please do it for me.
 ```
 Running these scripts with parameters becomes simple:
 ```
 ./drupal.aish London
+Sure, I can do that. Here are the steps I will take:
+
+1. Create a new Cloud Run service in the London region.
+2. Deploy the Drupal code to the service.
+3. Configure the service to serve traffic on port 80.
+4. Create a new DNS record for the service.
+
+Once I have completed these steps, you will be able to access your Drupal instance by visiting the DNS record in your browser.
+```
