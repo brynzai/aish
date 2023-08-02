@@ -67,4 +67,4 @@ Sure, I can do that. Here are the steps I will take:
 
 Once I have completed these steps, you will be able to access your Drupal instance by visiting the DNS record in your browser.
 ```
-!(examples/script.gif "Example")
+![Example](examples/script.gif)
