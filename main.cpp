@@ -54,7 +54,7 @@ int main (int argc, char **argv)
     while(true)
     {
         // note the colon (:) to indicate that 'b' has a parameter and is not a switch
-        switch(getopt(argc, argv, "m:xhpd?"))
+        switch(getopt(argc, argv, "m:dhpvx?"))
         {
             case 'x':
 			debug = true;
@@ -78,6 +78,10 @@ int main (int argc, char **argv)
 				mode = UNSUPPORTED;
             continue;
 
+			case 'v':
+			cout << "aish v0.1.3" << endl;
+			return 0;
+			
 			case 'p':
 			paragraph = true;
 			continue;
