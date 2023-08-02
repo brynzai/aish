@@ -104,9 +104,15 @@ WARNING use AI for shell carefully and at you own risk.)USAGE" << endl;
     }
 
 	// Make sure to warn people about unexpected AI shell behaviour.
-	// Future maybe we can offer a bypass for this.
-	//if (regex_match(smode, regex(".*shell.*")))
-	//	cerr << YELLOW << "WARNING use AI for shell carefully and at you own risk." << RESET << endl;
+	// Test the file ~/.aish/accept exists.
+	if (regex_match(smode, regex(".*shell.*")))
+	{
+		ifstream accepted(getenvsafe("HOME") + ".aish/accept");
+		if(!accepted) {
+			cerr << YELLOW << "WARNING use AI for shell carefully and at you own risk."
+				<< endl << "touch ~/.aish/accept to hide this in the future." << RESET << endl;
+		}
+	}
 
 	ps1 = "\e[0;33m"+smode+"🙂\033[0m> ";
 	// Did we specify a file after args?
