@@ -65,6 +65,7 @@ int main (int argc, char **argv)
 
             case 'm':
             smode = optarg;
+			smode = regex_replace(smode, regex("(^[ ]+)|([ ]+$)"),"");
 			if (smode == "shellbard")
 				mode = SHELLBARD;
 			else if (smode == "chatbard")
@@ -84,11 +85,14 @@ int main (int argc, char **argv)
             case '?':
             case 'h':
             default :
-            cout << R"USAGE(Usage: aish [-xp] [-m MODE]
-Where MODE is one of: chatbard|chatgpt|shellbard|shellgpt and defaults to shellbard.
-Environment variabes required for Bard: 
-] Ask the shell to do anything for you in plain language. Use a blank line to submit.
-			)USAGE" << endl;
+            *logs << R"USAGE(Usage: aish [-xp] [-m MODE]
+  -m mode is one of: chatbard|chatgpt|shellbard|shellgpt and defaults to shellbard.
+Environment variables required for Bard: CLOUDSDK_CORE_PROJECT, GOOGLE_APPLICATION_CREDENTIALS
+Environment variables required for GPT: OPENAI_ORG, OPENAI_API_KEY
+
+  -p is paragraph mode: Use a blank line to submit.
+  -x is trace mode similar to bash.
+WARNING use AI for shell carefully and at you own risk.)USAGE" << endl;
             return 0;
 			break;
 
@@ -100,9 +104,15 @@ Environment variabes required for Bard:
     }
 
 	// Make sure to warn people about unexpected AI shell behaviour.
-	// Future maybe we can offer a bypass for this.
-	if (regex_match(smode, (regex)".*shell.*"))
-		cerr << YELLOW << "WARNING use AI for shell carefully and at you own risk." << RESET << endl;
+	// Test the file ~/.aish/accept exists.
+	if (regex_match(smode, regex(".*shell.*")))
+	{
+		ifstream accepted(getenvsafe("HOME") + "/.aish/accept");
+		if(!accepted) {
+			cerr << YELLOW << "WARNING use AI for shell carefully and at you own risk."
+				<< endl << "touch ~/.aish/accept to hide this in the future." << RESET << endl;
+		}
+	}
 
 	ps1 = "\e[0;33m"+smode+"🙂\033[0m> ";
 	// Did we specify a file after args?
@@ -132,7 +142,7 @@ Environment variabes required for Bard:
 	mkdir((getenvsafe("HOME") + "/.aish").c_str(), 0700);
 	history.open(getenvsafe("HOME") + "/.aish/aish_history");
 	
-	cout << ps1;
+	*logs << ps1;
 
 	while (getline(*input, cmd))
 	{
@@ -167,7 +177,7 @@ Environment variabes required for Bard:
 				cmd = regex_replace(cmd, (regex)"^cd\\s*", "");
 				if (chdir(cmd.c_str()))
 					cerr << RED << "Failed to change directory: ENO " << errno << RESET << endl;
-				cout << ps1;
+				*logs << ps1;
 				continue;
 			}
 
@@ -197,11 +207,11 @@ Environment variabes required for Bard:
 			setenv("?", to_string(res).c_str(), 1);
 			if (res)
 			{
-				cout << regex_replace(ps1, (regex)"🙂", "😕");
+				*logs << regex_replace(ps1, (regex)"🙂", "😕");
 				continue;
 			}
 		}
-		cout << ps1;
+		*logs << ps1;
 	}
 
     return 0;
