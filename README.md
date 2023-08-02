@@ -1,9 +1,20 @@
 # AISH
 The AI Shell
 This shell takes your commands and does what you ask via translating them to intermediate scripting languages and running them. Beware the risk of AI running or deleting something you didn't expect. Use at your own risk. Whatever mode you use you may choose to override the AI temperature via the environment variable: 
-`AISHTEMP` defaults to 0.2. Sessions are not currently persisted to disk and each run is a new thread.
+`AISH_TEMP` defaults to 0.2. Sessions are not currently persisted to disk and each run is a new thread.
 
-# Modes
+# Installing
+Latest releases are available for RPM based Linux distros at the BrynzAI COPR: https://copr.fedorainfracloud.org/coprs/boeroboy/brynzai/ 
+```
+dnf copr enable boeroboy/brynzai
+dnf install aish
+```
+Prerequisites include `libjsoncpp` and `libcurl`.
+## Build from Source
+Install `jsoncpp-devel` and `libcurl-devel` and simply run `make`.
+
+# Using
+## Modes
 Modes are specified with the `-m` arg. Modes fall into two categories: shell or chat. Shell mode tries to translate your input into local commands and runs them immediately. Chat mode is simple chat as you may encounter in the browser. Currently there are for modes supported which are documented below:
 1. shellbard
 2. shellgpt
