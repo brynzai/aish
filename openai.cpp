@@ -20,10 +20,10 @@ int shellgpt(const string &cmd)
 	Json::Value thread, eq, message, response;
 	Json::FastWriter fastWriter;
 	static string apiorg = getenvsafe("OPENAI_ORG");
-	static string apikey = getenvsafe("OPENAI_API_KEY");
+    static string apikey = getenvsafe("OPENAI_API_KEY");
 	string sname;
 
-	unsetenv("OPENAI_API_KEY");
+    unsetenv("OPENAI_API_KEY");
 	try
 	{
 		if (thread.empty())
@@ -58,7 +58,7 @@ int shellgpt(const string &cmd)
 		
 		// This is ugly but seems to be the best way to extract markdown.
 		smatch match;
-		regex reg("```(.*)```", regex::extended);
+		regex reg("```\n?(.*)```", regex::extended);
 		if (regex_search(scr, match, reg))
 			scr = match[1];
 		
@@ -84,9 +84,9 @@ int chatgpt(const string &cmd)
 	Json::Value thread, eq, message, response;
 	Json::FastWriter fastWriter;
 	static string apiorg = getenvsafe("OPENAI_ORG");
-	static string apikey = getenvsafe("OPENAI_API_KEY");
+    static string apikey = getenvsafe("OPENAI_API_KEY");
 
-	unsetenv("OPENAI_API_KEY");
+    unsetenv("OPENAI_API_KEY");
 	try
 	{
 		if (thread.empty())
@@ -108,7 +108,7 @@ int chatgpt(const string &cmd)
 			cerr << YELLOW << "WARN: HTTP " << httpCode << ": " << response << RESET << endl;
 
 		Json::Value newmsg = response["choices"][0]["message"];
-		cout << newmsg["content"].asString() << endl;
+		*logs << newmsg["content"].asString() << endl;
 		thread["messages"].append(newmsg);
 	}
 	catch (const exception& e)
