@@ -43,11 +43,11 @@ int shellbard(const string &cmd)
 			// C++11 literals are great but tricky when inserting values.
 			string initial = R"JSON({
 			 "instances": [{"prefix": "Please write me a bash script to do the following: )JSON" 
-			 + regex_replace(cmd, (regex)"\"", "\\\"") + R"JSON("},
+			 + regex_replace(cmd, regex("\"", "\\\"")) + R"JSON("},
 			{"context": "You are a chatbot with access to cloud resources using the oidc token TOKEN."}],
 			  "parameters": {"temperature": 0.2, "maxOutputTokens": 2048}})JSON";
 
-			initial = regex_replace(initial, (regex)"TOKEN", getenvsafe("GOOGLE_APPLICATION_CREDENTIALS"));
+			initial = regex_replace(initial, regex("TOKEN"), getenvsafe("GOOGLE_APPLICATION_CREDENTIALS"));
 
 			Json::Reader reader;
 			if (!reader.parse(initial.c_str(), thread))
@@ -62,8 +62,8 @@ int shellbard(const string &cmd)
 
 		// Forget JsonValue building. This is just simpler.
 		string payload = (string)"{\"instances\": [{\"prefix\": \"" 
-		 + "Please write me a bash script with top line shebang to do the following: "
-		 + regex_replace(cmd, (regex)"\"", "\\\"")
+		 + "Please write me a bash script with top line shebang to do the following: " 
+		 + regex_replace(cmd, regex("\"", "\\\""))
 		 + "\"}],  \"parameters\": {\"temperature\": 0.2, \"maxOutputTokens\": 2048}}";
 
 		// As of 16-JUL-2023, this only seems to be available in us-central1
@@ -140,7 +140,7 @@ int chatbard(const string &cmd)
 				{"context": "You are a chatbot with access to cloud resources using the oidc token TOKEN.",
 				"messages":[]}], "parameters": {"temperature": 0.1, "maxOutputTokens": 1024}})JSON";
 
-			initial = regex_replace(initial, (regex)"TOKEN", getenvsafe("GOOGLE_APPLICATION_CREDENTIALS"));
+			initial = regex_replace(initial, regex("TOKEN"), getenvsafe("GOOGLE_APPLICATION_CREDENTIALS"));
 
 			Json::Reader reader;
 			if (!reader.parse(initial.c_str(), thread))
