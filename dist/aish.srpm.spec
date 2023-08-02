@@ -3,7 +3,7 @@
 # In honor of Seth Vidal https://www.redhat.com/it/blog/thank-you-seth-vidal
 
 Name:           aish
-Version:        0.1.1
+Version:        0.1.2
 Release:        1%{?dist}
 Summary:        AI shell is a CLI for AI to write and script in plain language.
 License:        MPL
