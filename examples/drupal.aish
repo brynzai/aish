@@ -1,0 +1,2 @@
+#!/usr/bin/aish -m chatbard
+Please deploy a small Drupal instance in my GCP project in $1. Use Cloud Run if possible. Please do it for me.
