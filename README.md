@@ -15,6 +15,7 @@ Prerequisites include `libjsoncpp` and `libcurl`.
 Install `jsoncpp-devel` and `libcurl-devel` and simply run `make`.
 
 # Using
+Optionally set temperature via `AISH_TEMP` environment variable. The rest depends on the mode being used, which defaults to `shellbard`.
 ## Modes
 Modes are specified with the `-m` arg. Modes fall into two categories: shell or chat. Shell mode tries to translate your input into local commands and runs them immediately. Chat mode is simple chat as you may encounter in the browser. Currently there are for modes supported which are documented below:
 1. shellbard
