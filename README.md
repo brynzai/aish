@@ -3,6 +3,7 @@ The AI Shell
 This shell takes your commands and does what you ask via translating them to intermediate scripting languages and running them. Beware the risk of AI running or deleting something you didn't expect. Use at your own risk. Whatever mode you use you may choose to override the AI temperature via the environment variable: 
 `AISH_TEMP` defaults to 0.2. Sessions are not currently persisted to disk and each run is a new thread.
 
+[![YouTube Demo](https://img.youtube.com/vi/8t8u9x9FtdQ/0.jpg)](https://youtu.be/8t8u9x9FtdQ)
 # Installing
 Latest releases are available for RPM based Linux distros at the BrynzAI COPR: https://copr.fedorainfracloud.org/coprs/boeroboy/brynzai/ 
 ```
