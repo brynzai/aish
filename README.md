@@ -1,6 +1,5 @@
-# AISH
-The AI Shell
-This shell takes your commands and does what you ask via translating them to intermediate scripting languages and running them. Beware the risk of AI running or deleting something you didn't expect. Use at your own risk. Whatever mode you use you may choose to override the AI temperature via the environment variable: 
+# AISH - The AI Shell
+This general CLI for LLM chats is designed to support as many AI interfaces as possible. It supports simple chat modes as well as a shell modes. This shell takes your commands and does what you ask via translating them to intermediate scripting languages and running them. Beware the risk of AI running or deleting something you didn't expect. Use at your own risk. Whatever mode you use you may choose to override the AI temperature via the environment variable: 
 `AISH_TEMP` defaults to 0.2. Sessions are not currently persisted to disk and each run is a new thread.
 
 [![YouTube Demo](https://img.youtube.com/vi/8t8u9x9FtdQ/0.jpg)](https://youtu.be/8t8u9x9FtdQ)
@@ -45,7 +44,9 @@ Note that OIDC tokens may expire frequently and need to be refreshed. There is c
 ### bard
 Simple chat as with the Bard page. Your identity will also allow management of cloud resources in your GCP project.
 ### shellbard
-Shellbard is the default mode and will translate your input to local shell code and execute it immediately. 
+Shellbard is the default mode and will translate your input to local shell code and execute it immediately.
+### gemini
+Gemini is currently a stub but will add support for it as soon as I can get my hands on the API.
 
 ## Llama2 Server
 I packaged Llama.cpp for Fedora/RPM distributions and added support for Llama server. This local REST API is simple and unauthenticated.
@@ -68,8 +69,7 @@ llama🙂>
 ```
 
 # Scripts
-The shell supports scripts. So you can write a script in human language:
-
+The shell modes support scripts. So you can write a script in human language:
 ```
 #!/usr/bin/aish -xm shellgpt
 tell me the time with timezone
@@ -94,7 +94,12 @@ Once I have completed these steps, you will be able to access your Drupal instan
 ```
 ![Example](examples/script.gif)
 
-#Changelog
+# Writing Plugins
+Plugin architecture has been super simplified. No OOP or classes are necessary. Simply write your function that handles a std::string cmd parameter and returns an int for success. Then register that function pointer to the plugin system by instantiating a global plugin instance with the string name of your handler.  As the design pattern goes, it's an ugly code, but the it checks out.
+
+Make sure to use (and not change) the global ostream pointer `*logs` instead of cout directly. Doing so will let the global output mode change including audio text to speech mode or whatever file redirection happens in the future.
+
+# Changelog
 ## 0.2.0 (21-SEP-2023)
 1. Added support for Llama2 via Llama.cpp server.
 2. Simplified plugin architecture.
