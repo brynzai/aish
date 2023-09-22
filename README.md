@@ -12,16 +12,19 @@ dnf install aish
 ```
 Prerequisites include `libjsoncpp` and `libcurl`.
 ## Build from Source
-Install `jsoncpp-devel` and `libcurl-devel` and simply run `make`.
+Install `jsoncpp-devel` and `libcurl-devel` and simply run `make`. Audio mode will require the `festival` library and deps.
+It is statically linked. Enable this with AUDIO_MODE=1.
 
 # Using
 Optionally set temperature via `AISH_TEMP` environment variable. The rest depends on the mode being used, which defaults to `shellbard`.
 ## Modes
-Modes are specified with the `-m` arg. Modes fall into two categories: shell or chat. Shell mode tries to translate your input into local commands and runs them immediately. Chat mode is simple chat as you may encounter in the browser. Currently there are for modes supported which are documented below:
+Modes are specified with the `-m` arg. Modes fall into two categories: shell or default (chat). Shell mode tries to translate your input into local commands and runs them immediately. Chat mode is simple chat as you may encounter in the browser. Currently there are for modes supported which are documented below:
 1. shellbard
 2. shellgpt
-3. chatbard
+3. shellllama
+4. bard
 4. chatgpt
+5. llama
 
 Default mode is currently `shellbard`.
 ## OpenAI GPT Mode
@@ -39,10 +42,30 @@ Google can be used if you set up a Google Cloud account and project with the Ver
 1. `CLOUDSDK_CORE_PROJECT` set to your project.
 2. `GOOGLE_APPLICATION_CREDENTIALS` set to your valid OIDC token.
 Note that OIDC tokens may expire frequently and need to be refreshed. There is currently no automation support for this in aish.
-### chatbard
+### bard
 Simple chat as with the Bard page. Your identity will also allow management of cloud resources in your GCP project.
 ### shellbard
 Shellbard is the default mode and will translate your input to local shell code and execute it immediately. 
+
+## Llama2 Server
+I packaged Llama.cpp for Fedora/RPM distributions and added support for Llama server. This local REST API is simple and unauthenticated.
+Simply specify your Llama server with the env var `LLAMA_SERVER`. Streaming is enabled which required a new curl handler.
+1. `LLAMA_SERVER=http://localhost:8080/completion` localhost is the default.
+
+# Group Chat
+As of 0.2.0 it is possible to cross-chat between plugins. If the first word in your command is one of the plugin names, 
+the mode will be switched to that plugin and all current thread history will be carried over. This is a great way to ask 
+for a second opinion:
+```
+jboero@xps ~/c/aish (0.2.0)> ./aish -m llama
+llama🙂> Hi Llama. Can you tell me what year Wisconsin became a state?
+1848. Wisconsin was admitted as the 30th U.S. state on May 29, 1848.
+llama🙂> Bard, do you agree with Llama?
+bard🫡:  Llama is correct. Wisconsin became the 30th state of the United States on May 29, 1848.
+bard🙂> Llama what's its population?
+llama🫡: 1023768954
+llama🙂>
+```
 
 # Scripts
 The shell supports scripts. So you can write a script in human language:
@@ -70,3 +93,10 @@ Sure, I can do that. Here are the steps I will take:
 Once I have completed these steps, you will be able to access your Drupal instance by visiting the DNS record in your browser.
 ```
 ![Example](examples/script.gif)
+
+#Changelog
+## 0.2.0 (21-SEP-2023)
+1. Added support for Llama2 via Llama.cpp server.
+2. Simplified plugin architecture.
+3. Festival voice output option via `-a`
+4. Cross-plugin context enables group chat between generative AIs.

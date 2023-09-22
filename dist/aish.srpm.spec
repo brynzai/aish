@@ -3,12 +3,12 @@
 # In honor of Seth Vidal https://www.redhat.com/it/blog/thank-you-seth-vidal
 
 Name:           aish
-Version:        0.1.3
+Version:        0.2.0
 Release:        1%{?dist}
 Summary:        AI shell is a CLI for AI to write and script in plain language.
 License:        MPL
 Source0:        https://github.com/brynzai/aish/archive/refs/tags/v%{version}.tar.gz
-BuildRequires:  coreutils make jsoncpp-devel libcurl-devel gcc-c++
+BuildRequires:  coreutils make jsoncpp-devel libcurl-devel gcc-c++ festival-devel
 Requires(pre):  shadow-utils
 Requires(post): libcurl jsoncpp
 Requires(preun):        systemd

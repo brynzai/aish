@@ -5,18 +5,20 @@
 // In this file is support for:
 //  Google Bison code completion (default mode)
 //  Bard chat with GCP support.
+// https://cloud.google.com/vertex-ai/docs/reference/rest
 
-#include "aish.h"
 #include <regex>
+#include "../aish.h"
 
 using namespace std;	// Sod the style guide.
 
-void vertexappend(Json::Value &thread, const std::string &role, const std::string &message)
+void vertexappend(Json::Value &thread, const string &role, const string &message)
 {
 	Json::Value entry;
 	entry["author"] = role;
 	entry["content"] = message;
 	thread.append(entry);
+	global_thread.append(role + ": " + message + '\n');
 }
 
 // Vertex's Bison mode is for code generation.
@@ -40,31 +42,19 @@ int shellbard(const string &cmd)
 	{
 		if (thread.empty())
 		{
-			// C++11 literals are great but tricky when inserting values.
-			string initial = R"JSON({
-			 "instances": [{"prefix": "Please write me a bash script to do the following: )JSON" 
-			 + regex_replace(cmd, regex("\""), "\\\"") + R"JSON("},
-			{"context": "You are a chatbot with access to cloud resources using the oidc token TOKEN."}],
-			  "parameters": {"temperature": 0.2, "maxOutputTokens": 2048}})JSON";
+			Json::Value prefix, params;
+			prefix["context"] = "You are a codebot for writing primarily bash. Optionally use my cloud OIDC token: " 
+				+ getenvsafe("GOOGLE_APPLICATION_CREDENTIALS");
+			
+			params["temperature"] = temperature;
+			params["maxOutputTokens"] = 2048;
 
-			initial = regex_replace(initial, regex("TOKEN"), getenvsafe("GOOGLE_APPLICATION_CREDENTIALS"));
-
-			Json::Reader reader;
-			if (!reader.parse(initial.c_str(), thread))
-			{
-				cerr << "ERROR failed to set up initial thread: "
-					<< reader.getFormattedErrorMessages() << endl;
-				exit(1);
-			}
-
-			thread["parameters"]["temperature"] = temperature;
+			thread["instances"] = Json::Value(Json::arrayValue);
+			thread["instances"].append(prefix);
+			thread["parameters"] = params;
 		}
 
-		// Forget JsonValue building. This is just simpler.
-		string payload = (string)"{\"instances\": [{\"prefix\": \"" 
-		 + "Please write me a bash script with top line shebang to do the following: " 
-		 + regex_replace(cmd, regex("\""), "\\\"")
-		 + "\"}],  \"parameters\": {\"temperature\": 0.2, \"maxOutputTokens\": 2048}}";
+		thread["instances"][0]["prefix"] = global_thread + "Please write me a bash script to do the following: " + cmd;
 
 		// As of 16-JUL-2023, this only seems to be available in us-central1
 		string url = "https://us-central1-aiplatform.googleapis.com/v1/projects/" 
@@ -76,7 +66,7 @@ int shellbard(const string &cmd)
 		headers = curl_slist_append(headers, "Content-Type: application/json; charset=utf-8");
 
 		// This will actually be zero if everything is OK (200).
-		httpCode = mycurljson(url, response, "POST", headers, payload);
+		httpCode = mycurljson(url, response, "POST", headers, fastWriter.write(thread));
 		if (httpCode)
 		{
 			cerr << YELLOW << "WARN: HTTP " << httpCode << ": " << response << RESET << endl;
@@ -84,13 +74,14 @@ int shellbard(const string &cmd)
 		}
 
 		scr = response["predictions"][0]["content"].asString();
-
 		{
 			using namespace chrono;
 			milliseconds ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 			sname = getenvsafe("HOME") + "/.aish/bard_" + to_string(ms.count()) + ".sh";
 		}
 
+		global_thread.append("user: " + cmd + '\n' + "bard: " + scr + '\n');
+		
 		// This is ugly but seems to be the best way to extract markdown.
 		smatch match;
 		regex reg("```\n?(.*)```", regex::extended);
@@ -107,19 +98,21 @@ int shellbard(const string &cmd)
 	}
 	catch (const exception& e)
 	{
-		cerr <<RED<< "ERROR: " << e.what() <<RESET<< endl;
+		cerr << RED << "ERROR: " << e.what() << RESET << endl;
 		return 1;
 	}
 	return 0;
 }
 
 // Simple chat with bard.
-int chatbard(const string &cmd)
+int bard(const string &cmd)
 {
 	// A static running thread of the chat history.
 	static Json::Reader reader;
-	static Json::Value thread;
+	static Json::Value thread, response;
+	Json::FastWriter fastWriter;
 	string sname;
+	int httpCode;
 
 	if (!getenv("CLOUDSDK_CORE_PROJECT") || !getenv("GOOGLE_APPLICATION_CREDENTIALS"))
 	{
@@ -134,49 +127,51 @@ int chatbard(const string &cmd)
 		// Initialize static thread if it's empty.
 		if (thread.empty())
 		{
-			// C++11 literals are great but tricky when inserting values.
-			string initial = R"JSON({
-			 "instances": [
-				{"context": "You are a chatbot with access to cloud resources using the oidc token TOKEN.",
-				"messages":[]}], "parameters": {"temperature": 0.1, "maxOutputTokens": 1024}})JSON";
+			Json::Value instance, params;
+			instance["context"] = "You are a chatbot with access to cloud resources in my project: "
+				+ getenvsafe("CLOUDSDK_CORE_PROJECT")
+				+ " using the OIDC token: " 
+				+ getenvsafe("GOOGLE_APPLICATION_CREDENTIALS");
+			instance["messages"] = Json::Value(Json::arrayValue);
 
-			initial = regex_replace(initial, regex("TOKEN"), getenvsafe("GOOGLE_APPLICATION_CREDENTIALS"));
+			params["temperature"] = temperature;
+			params["maxOutputTokens"] = 2048;
 
-			Json::Reader reader;
-			if (!reader.parse(initial.c_str(), thread))
-			{
-				cerr << "ERROR failed to set up initial thread: "
-					<< reader.getFormattedErrorMessages() << endl;
-				exit(1);
-			}
-			thread["parameters"]["temperature"] = temperature;
+			thread["instances"] = Json::Value(Json::arrayValue);
+			thread["instances"].append(instance);
+			thread["parameters"] = params;
 		}
+
+		// Attach history outside of this to avoid double history
+		Json::Value global_history;
+		global_history["author"] = "user";
+		global_history["content"] = "Hello Bard. This is my conversation history.";
+		thread["instances"][0]["messages"].append(global_history);
+		global_history["author"] = "system";
+		global_history["content"] = global_thread;
+		thread["instances"][0]["messages"].append(global_history);
 
 		vertexappend(thread["instances"][0]["messages"], "user", cmd);
 
-		// The immediate response
-		Json::Value response;
-		int httpCode;
-
 		// As of 16-JUL-2023, this only seems to be available in us-central1
 		string url = "https://us-central1-aiplatform.googleapis.com/v1/projects/" 
-		 + getenvsafe("CLOUDSDK_CORE_PROJECT")
-		 + "/locations/us-central1/publishers/google/models/chat-bison:predict";
+			+ getenvsafe("CLOUDSDK_CORE_PROJECT")
+			+ "/locations/us-central1/publishers/google/models/chat-bison:predict";
 		string bearer = "Authorization: Bearer " + getenvsafe("GOOGLE_APPLICATION_CREDENTIALS");
 
 		struct curl_slist *headers = curl_slist_append(NULL, bearer.c_str());
 		headers = curl_slist_append(headers, "Content-Type: application/json; charset=utf-8");
 
 		// This will actually be zero if everything is OK (200).
-		Json::FastWriter fastWriter;
 		string request = fastWriter.write(thread);
 		httpCode = mycurljson(url, response, "POST", headers, request);
 		if (httpCode)
 			cerr << YELLOW << "WARN: HTTP " << httpCode << ": " << response << RESET << endl;
 		
 		Json::Value newRes = response["predictions"][0]["candidates"][0];
-		thread["instances"][0]["messages"].append(newRes);
-		cout <<CYAN<< newRes["content"].asString() <<RESET<< endl;
+		vertexappend(thread["instances"][0]["messages"], newRes["author"].asString(), newRes["content"].asString());
+
+		*logs << newRes["content"].asString() << endl;
 	}
 	catch (const exception& e)
 	{
@@ -185,3 +180,15 @@ int chatbard(const string &cmd)
 	}
 	return 0;
 }
+
+// A brilliant TODO stub worthy of GenAI
+int chatgemini(const string &cmd)
+{
+	*logs << "Gemini isn't supported yet but will be as soon as it's released." << endl;
+	return 0;
+}
+
+// Register these functions as plugins.
+AishPlugin geminiPlugin("catgemini", chatgemini);
+AishPlugin bardPlugin("bard", bard);
+AishPlugin shellbardPlugin("shellbard", shellbard);

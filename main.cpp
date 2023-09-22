@@ -5,22 +5,18 @@
 //#define CURL_STATICLIB
 
 #include "aish.h"
+#include "ttsstream.h"
 
 #include <sstream>
 #include <fstream>
 #include <regex>
+#include <map>
 #include <sys/stat.h>
 #include <signal.h>
 #include "aish.h"
 //#include <ncurses.h> // FUTURE
 
 using namespace std; // Sod the style guide.
-
-// Lazy headers.. also bad style
-int chatgpt(const string &cmd);
-int shellgpt(const string &cmd);
-int chatbard(const string &cmd);
-int shellbard(const string &cmd);
 
 // Globals... so sue me?
 ostream *logs = &std::cout;
@@ -29,8 +25,9 @@ ostream *logs = &std::cout;
 // This implies IFS is a blank line.
 bool paragraph, debug;
 float temperature = 0.2f;
-string ps1;
-aishmode mode = SHELLBARD;
+string global_thread = "This is a conversation between user and one or more chatbots. Thread history:\n",
+	ps1 = getenvsafe("PS1") + "aish: ", 
+	mode = "shellbard";
 
 // Ignore signals for now.
 void signals(int sig_num) {}
@@ -38,7 +35,7 @@ void signals(int sig_num) {}
 int main (int argc, char **argv)
 {
 	int res;
-	string cmd, smode = "shellbard";
+	string cmd;
 	string stemp = getenvsafe("AISH_TEMP");
 	stringstream buffer;
 	istream *input = &cin;
@@ -46,7 +43,7 @@ int main (int argc, char **argv)
 	ofstream history;
 
 	// Ignore ^C SIGINT for now.
-	signal(SIGINT, signals);
+	//signal(SIGINT, signals);
 
 	if (stemp != "")
 		temperature = stof(stemp);
@@ -54,7 +51,7 @@ int main (int argc, char **argv)
     while(true)
     {
         // note the colon (:) to indicate that 'b' has a parameter and is not a switch
-        switch(getopt(argc, argv, "m:dhpvx?"))
+        switch(getopt(argc, argv, "m:dhpvxac?"))
         {
             case 'x':
 			debug = true;
@@ -64,26 +61,35 @@ int main (int argc, char **argv)
 			continue;
 
             case 'm':
-            smode = optarg;
-			smode = regex_replace(smode, regex("(^[ ]+)|([ ]+$)"),"");
-			if (smode == "shellbard")
-				mode = SHELLBARD;
-			else if (smode == "chatbard")
-				mode = CHATBARD;
-			else if (smode == "shellgpt")
-				mode = SHELLGPT;
-			else if (smode == "chatgpt")
-				mode = CHATGPT;
-			else
-				mode = UNSUPPORTED;
-            continue;
+            mode = optarg;
+			mode = regex_replace(mode, regex("(^[ ]+)|([ ]+$)"),"");
+			if (!AishPlugin::GetPlugin(mode))
+			{
+				cerr << "ERROR: Mode " << mode << " is not supported by this version of aish. Available mode plugins: ";
+				AishPlugin::PrintAll();
+				exit(1);
+			}
+			continue;
 
 			case 'v':
-			cout << "aish v0.1.3" << endl;
+			cout << "aish v0.2.0" << endl;
 			return 0;
 			
 			case 'p':
 			paragraph = true;
+			continue;
+
+			case 'c':
+			// TODO immediate mode. cin << argv
+			continue;
+
+			case 'a':
+			#ifdef AUDIO_MODE
+			// Set logs to a Festival text to speech ostream.
+			logs = new ostream(new TTSBuf);
+			#else
+			cerr << "WARN: this build does not support Festival text to speech." << endl;
+			#endif
 			continue;
 
             case '?':
@@ -94,9 +100,12 @@ int main (int argc, char **argv)
 Environment variables required for Bard: CLOUDSDK_CORE_PROJECT, GOOGLE_APPLICATION_CREDENTIALS
 Environment variables required for GPT: OPENAI_ORG, OPENAI_API_KEY
   -v shows version and quits.
+  -a Audio mode - voice support.
   -p paragraph mode: Use a blank line to submit.
   -x trace mode similar to bash.
-WARNING use AI for shell carefully and at you own risk.)USAGE" << endl;
+WARNING use AI for shell carefully and at you own risk.
+List of plugins supported by this build:)USAGE" << endl;
+			AishPlugin::PrintAll();
             return 0;
 			break;
 
@@ -109,7 +118,7 @@ WARNING use AI for shell carefully and at you own risk.)USAGE" << endl;
 
 	// Make sure to warn people about unexpected AI shell behaviour.
 	// Test the file ~/.aish/accept exists.
-	if (regex_match(smode, regex(".*shell.*")))
+	if (regex_match(mode, regex(".*shell.*")))
 	{
 		ifstream accepted(getenvsafe("HOME") + "/.aish/accept");
 		if(!accepted) {
@@ -118,7 +127,7 @@ WARNING use AI for shell carefully and at you own risk.)USAGE" << endl;
 		}
 	}
 
-	ps1 = "\e[0;33m"+smode+"🙂\033[0m> ";
+	
 	// Did we specify a file after args?
 	if (optind < argc)
 	{
@@ -131,7 +140,7 @@ WARNING use AI for shell carefully and at you own risk.)USAGE" << endl;
 				return 1;
 			}
 			input = &scriptFile;
-			// Discard shebang line
+			// Discard shebang line. PS1 blank.
 			getline(*input, fname);
 			ps1 = "";
 		}
@@ -146,13 +155,41 @@ WARNING use AI for shell carefully and at you own risk.)USAGE" << endl;
 	mkdir((getenvsafe("HOME") + "/.aish").c_str(), 0700);
 	history.open(getenvsafe("HOME") + "/.aish/aish_history");
 	
-	*logs << ps1;
+	if (ps1.length())
+		ps1 = YELLOW+mode+"🙂"+RESET+"> ";
+	cout << ps1 << flush;
 
 	while (getline(*input, cmd))
 	{
-		// Trim white space and comment. Suck it, Python.
+		// Trim white space and comment. Escape quotes.
 		cmd = regex_replace(cmd, (regex)"^\\s+|\\s+$|\\s*#.*$", "");
+		cmd = regex_replace(cmd, regex("\""), "\\\"");
 
+		// Live mode switch feature (group chat)
+		// Take the first word of cmd, to_lower and strip punctuation.
+		// If we're trying to speak to another mode, switch mode...
+		try
+		{
+			stringstream cmdstream(cmd);
+			string firstword;
+			cmdstream >> firstword;
+			transform(firstword.begin(), firstword.end(), firstword.begin(),
+				[](unsigned char c){ return tolower(c); });
+			firstword = regex_replace(firstword, regex("[[:punct:]]"), "");
+
+			if (AishPlugin::GetPlugin(firstword))
+			{
+				mode = firstword;
+				*logs << YELLOW << mode << RESET << "🫡: ";
+				if (ps1.length())
+					ps1 = YELLOW+mode+"🙂"+RESET+"> ";
+			}
+		}
+		catch(const std::exception& e)
+		{
+			cerr <<YELLOW<< "WARN Unable to detect or switch mode: " << e.what() <<RESET<< endl;
+		}
+		
 		// Paragraph mode parsing isn't straightforward.
 		if (paragraph)
 		{
@@ -170,13 +207,13 @@ WARNING use AI for shell carefully and at you own risk.)USAGE" << endl;
 			}
 		}
 
-		if (cmd != "")
+		if (cmd.length())
 		{
 			// Specialty commands, exit, cd, etc.
 			if (cmd == "quit" || cmd == "exit")
 				break;
 			
-			if (cmd == "cd" || regex_match(cmd, (regex)"^cd\\s*.*"))
+			if (regex_match(cmd, (regex)"^cd\\s*.*?"))
 			{
 				cmd = regex_replace(cmd, (regex)"^cd\\s*", "");
 				if (chdir(cmd.c_str()))
@@ -193,18 +230,13 @@ WARNING use AI for shell carefully and at you own risk.)USAGE" << endl;
 				cmd = regex_replace(cmd, (regex)paramstr, argv[optind]);
 			}
 
-			if (debug) cerr << GREY << smode << ": " << cmd << RESET << endl;
-
-			// Ugly but simple.
-			switch (mode)
+			AishPlugin::plugFunc handler = AishPlugin::GetPlugin(mode);
+			if (handler)
+				res = handler(cmd);
+			else
 			{
-				case SHELLGPT: res = shellgpt(cmd); break;
-				case CHATGPT: res = chatgpt(cmd); break;
-				case SHELLBARD: res = shellbard(cmd); break;
-				case CHATBARD: res = chatbard(cmd); break;
-				default:
-					cerr << "Mode " << smode << " is not yet supported by aish." << endl;
-					return 1;
+				cerr << "ERROR: Plugin not supported or not found: " << mode << endl;
+				continue;
 			}
 
 			// Set the ? env variable just in case.
@@ -215,8 +247,16 @@ WARNING use AI for shell carefully and at you own risk.)USAGE" << endl;
 				continue;
 			}
 		}
-		*logs << ps1;
+		#if DEBUG
+			cerr << "global_thread: " << global_thread << endl;
+		#endif
+		cout << ps1;
 	}
 
+	if (logs && logs != &std::cout)
+	{
+		delete logs;
+		logs = NULL;
+	}
     return 0;
 }
