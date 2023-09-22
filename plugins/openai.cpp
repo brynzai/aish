@@ -1,17 +1,26 @@
-#include "aish.h"
+/*=====================================
+		AI Shell by John Boero
+		BrynzAI - 2023
+=====================================*/
+// In this file is support for OpenAI:
+//  chatgpt
+//  shellgpt
+// https://platform.openai.com/docs/api-reference
+
 #include <regex>
+#include "../aish.h"
 
 using namespace std;	// Style guide be damned...
 
 const string gpturl = "https://api.openai.com/v1/chat/completions";
 
 // Basic helper to append a message to a thread.
-void gptappend(Json::Value &thread, const std::string &role, const std::string &message)
+void gptappend(Json::Value &thread, const string &role, const string &message)
 {
 	Json::Value entry;
 	entry["role"] = role;
 	entry["content"] = message;
-	thread.append(entry);
+	thread["messages"].append(entry);
 }
 
 // Give GPT the option to control your environment.
@@ -28,12 +37,16 @@ int shellgpt(const string &cmd)
 	{
 		if (thread.empty())
 		{
+			Json::Value history;
+			history["role"] = "system";
+			
 			thread["model"] = "gpt-3.5-turbo";
 			thread["temperature"] = temperature;
-
-			gptappend(thread["messages"], "system", "You are a bash script coder providing only bash scripts");
+			thread["messages"] = Json::arrayValue;
+			thread["messages"].append(history);
 		}
 
+		thread["messages"][0]["content"] = "You are a bash script coder providing only bash scripts.\n" + global_thread;
 		gptappend(thread["messages"], "user", cmd);
 
 		struct curl_slist *headers = curl_slist_append(NULL, ("Authorization: Bearer " + apikey).c_str());
@@ -55,7 +68,7 @@ int shellgpt(const string &cmd)
 			sname = getenvsafe("HOME") + "/.aish/gpt_" + to_string(ms.count()) + ".sh";
 		}
 		string scr = response["choices"][0]["message"]["content"].asString();
-		
+		global_thread.append("user: " + cmd + "\nllama: " + scr + '\n');
 		// This is ugly but seems to be the best way to extract markdown.
 		smatch match;
 		regex reg("```\n?(.*)```", regex::extended);
@@ -91,10 +104,17 @@ int chatgpt(const string &cmd)
 	{
 		if (thread.empty())
 		{
+			Json::Value history;
+			history["role"] = "system";
+
 			thread["model"] = "gpt-3.5-turbo";
 			thread["temperature"] = temperature;
+			thread["messages"] = Json::arrayValue;
+			thread["messages"].append(history);
 		}
-
+		thread["messages"][0]["content"] = 
+			"You are a friendly chat bot in a chat with a human and possibly other chatbots.\n" 
+			+ global_thread;
 		gptappend(thread["messages"], "user", cmd);
 
 		struct curl_slist *headers = curl_slist_append(NULL, ("Authorization: Bearer " + apikey).c_str());
@@ -108,8 +128,9 @@ int chatgpt(const string &cmd)
 			cerr << YELLOW << "WARN: HTTP " << httpCode << ": " << response << RESET << endl;
 
 		Json::Value newmsg = response["choices"][0]["message"];
+		gptappend(thread, newmsg["role"].asString(), newmsg["content"].asString());
 		*logs << newmsg["content"].asString() << endl;
-		thread["messages"].append(newmsg);
+		global_thread.append("user: " + cmd + "\nchatgpt: " + newmsg["content"].asString() + '\n');
 	}
 	catch (const exception& e)
 	{
@@ -118,3 +139,7 @@ int chatgpt(const string &cmd)
 	}
 	return 0;
 }
+
+// Register these functions as plugins.
+AishPlugin chatGPTPlugin("chatgpt", chatgpt);
+AishPlugin shellGPTPlugin("shellgpt", shellgpt);
