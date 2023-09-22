@@ -8,11 +8,8 @@ Release:        1%{?dist}
 Summary:        AI shell is a CLI for AI to write and script in plain language.
 License:        MPL
 Source0:        https://github.com/brynzai/aish/archive/refs/tags/v%{version}.tar.gz
-BuildRequires:  coreutils make jsoncpp-devel libcurl-devel gcc-c++ festival-devel
-Requires(pre):  shadow-utils
+BuildRequires:  coreutils make jsoncpp-devel libcurl-devel gcc-c++ festival-devel alsa-lib-devel ncurses-devel
 Requires(post): libcurl jsoncpp
-Requires(preun):        systemd
-Requires(postun):       systemd
 URL:            https://www.github.com/brynzai/aish
 
 %define debug_package %{nil}
