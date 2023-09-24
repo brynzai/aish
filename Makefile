@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -std=c++11 -Wall -O3 -I/usr/include/speech_tools -DAUDIO_MODE 
+CFLAGS += -std=c++11 -Wall -O3 -I/usr/include/speech_tools
 LIBS = -ljsoncpp -lcurl -lestools -lestbase -leststring -lasound -lncurses /usr/lib64/libFestival.a
 SRC := $(wildcard *.cpp plugins/*.cpp) 
 HDR := $(wildcard *.h)
