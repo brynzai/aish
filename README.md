@@ -56,7 +56,7 @@ Simply specify your Llama server with the env var `LLAMA_SERVER`. Streaming is e
 # Group Chat
 As of 0.2.0 it is possible to cross-chat between plugins. If the first word in your command is one of the plugin names, 
 the mode will be switched to that plugin and all current thread history will be carried over. This is a great way to ask 
-for a second opinion:
+for a second opinion (note the population given is incorrect - no way Wisconsin has a billion people):
 ```
 jboero@xps ~/c/aish (0.2.0)> ./aish -m llama
 llama🙂> Hi Llama. Can you tell me what year Wisconsin became a state?
