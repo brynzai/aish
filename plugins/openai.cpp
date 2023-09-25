@@ -47,7 +47,7 @@ int shellgpt(const string &cmd)
 		}
 
 		thread["messages"][0]["content"] = "You are a bash script coder providing only bash scripts.\n" + global_thread;
-		gptappend(thread["messages"], "user", cmd);
+		gptappend(thread, "user", cmd);
 
 		struct curl_slist *headers = curl_slist_append(NULL, ("Authorization: Bearer " + apikey).c_str());
 		headers = curl_slist_append(headers, "Content-Type: application/json");
@@ -115,9 +115,9 @@ int chatgpt(const string &cmd)
 		thread["messages"][0]["content"] = 
 			"You are a friendly chat bot in a chat with a human and possibly other chatbots.\n" 
 			+ global_thread;
-		gptappend(thread["messages"], "user", cmd);
+		gptappend(thread, "user", cmd);
 
-		struct curl_slist *headers = curl_slist_append(NULL, ("Authorization: Bearer " + apikey).c_str());
+		struct curl_slist *headers = curl_slist_append(NULL, (string("Authorization: Bearer ") + apikey).c_str());
 		headers = curl_slist_append(headers, "Content-Type: application/json");
 
 		string payload = fastWriter.write(thread);

@@ -43,7 +43,7 @@ int main (int argc, char **argv)
 	ofstream history;
 
 	// Ignore ^C SIGINT for now.
-	//signal(SIGINT, signals);
+	signal(SIGINT, signals);
 
 	if (stemp != "")
 		temperature = stof(stemp);
@@ -180,7 +180,7 @@ List of plugins supported by this build:)USAGE" << endl;
 			if (AishPlugin::GetPlugin(firstword))
 			{
 				mode = firstword;
-				*logs << YELLOW << mode << RESET << "🫡: ";
+				*logs << YELLOW << mode << RESET << "🫡\n";
 				if (ps1.length())
 					ps1 = YELLOW+mode+"🙂"+RESET+"> ";
 			}

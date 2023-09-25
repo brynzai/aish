@@ -108,7 +108,7 @@ int shellllama(const string &cmd)
 // Simple chat with bard.
 int llama(const string &cmd)
 {
-	Json::Value message, response;
+	static Json::Value message, response;
 	Json::FastWriter fastWriter;
 	int httpCode;
 	string sname, scr, server;
@@ -128,23 +128,31 @@ int llama(const string &cmd)
 
 	try
 	{
-		struct curl_slist *headers = curl_slist_append(NULL, "Content-Type: application/json");
-		message["n_predict"] = 590;
-		message["repeat_last_n"] = 256;
-		message["stop"] = Json::arrayValue;
-		message["stop"].append("</s>");
-		message["stop"].append("Llama:");
-		message["stop"].append("User:");
+		if (message.empty())
+		{
+			message["stop"] = Json::arrayValue;
+			message["stop"].append("</s>");
+			message["stop"].append("Llama");
+			message["stop"].append("User");
+			message["stop"].append("global_thread");
+			message["stop"].append("system:");
 
-		message["top_p"] = 0.5;
-		message["stream"] = true;
+			message["n_predict"] = 590;
+			message["repeat_last_n"] = 4096;
+			message["top_p"] = 0.5;
+			message["stream"] = true;
+			message["temperature"] = temperature;
+			message["repeat_penalty"] = 2;
+		}
+
 		message["prompt"] = Json::arrayValue;
 		message["prompt"].append("This is a conversation between User and Llama, a friendly chatbot. Llama is helpful, kind, honest, good at writing, and never fails to answer any requests immediately and with precision.");
+		message["prompt"].append(global_thread);
 		message["prompt"].append("User: " + cmd);
 		message["prompt"].append("Llama: ");
-		message["temperature"] = temperature;
 
 		// This will actually be zero if everything is OK (200).
+		struct curl_slist *headers = curl_slist_append(NULL, "Content-Type: application/json");
 		httpCode = mycurl(server, stream, "POST", headers, fastWriter.write(message), streaming_callback);
 		if (httpCode)
 		{
