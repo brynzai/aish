@@ -62,9 +62,11 @@ jboero@xps ~/c/aish (0.2.0)> ./aish -m llama
 llama🙂> Hi Llama. Can you tell me what year Wisconsin became a state?
 1848. Wisconsin was admitted as the 30th U.S. state on May 29, 1848.
 llama🙂> Bard, do you agree with Llama?
-bard🫡:  Llama is correct. Wisconsin became the 30th state of the United States on May 29, 1848.
+bard🫡:
+Llama is correct. Wisconsin became the 30th state of the United States on May 29, 1848.
 bard🙂> Llama what's its population?
-llama🫡: 1023768954
+llama🫡:
+1023768954
 llama🙂>
 ```
 
