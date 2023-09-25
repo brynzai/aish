@@ -72,7 +72,7 @@ int main (int argc, char **argv)
 			continue;
 
 			case 'v':
-			cout << "aish v0.2.0" << endl;
+			cout << "aish v0.2.1" << endl;
 			return 0;
 			
 			case 'p':
