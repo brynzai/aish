@@ -24,7 +24,8 @@ this at your own risk and not in production. AI can produce unexpected results.
 %autosetup
 
 %build
-make -j
+# Try with AUDIO_MODE first. BuildRequires still fails if festivel-devel isn't available.
+CFLAGS="-DAUDIO_MODE" make -j || make -j
 
 %install
 mkdir -p %{buildroot}%{_bindir}/
