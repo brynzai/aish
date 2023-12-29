@@ -22,6 +22,9 @@ size_t streaming_callback(const char* in, size_t size, size_t num, char* out)
 
 	try
 	{
+		// Recommended for debugging:
+		//content = stream.str();
+
 		stream >> data;
 		content = data["content"].asString();
 
@@ -37,7 +40,7 @@ size_t streaming_callback(const char* in, size_t size, size_t num, char* out)
 	}
 	catch(const std::exception& e)
 	{
-		cerr << e.what() << endl;
+		cerr << stream.str() << " " << e.what() << endl;
 		return 0;
 	}
 }
@@ -45,27 +48,52 @@ size_t streaming_callback(const char* in, size_t size, size_t num, char* out)
 // Shell via Llama
 int shellllama(const string &cmd)
 {
-	Json::Value message, response;
+	static Json::Value message, response;
 	Json::FastWriter fastWriter;
 	int httpCode;
 	string sname, scr, server;
 
-	if (server == "" && !getenv("LLAMA_SERVER"))
+	if (server == "")
 	{
-		cerr << "INFO: missing environment variable: LLAMA_SERVER "
-			<< "Using http://localhost:8080/completion by default." << endl;
-		server = "http://localhost:8080/completion";
+		if (getenv("LLAMA_SERVER"))
+			server = getenvsafe("LLAMA_SERVER");
+		else
+		{
+			server = "http://localhost:8080/completion";
+			cerr << "WARNING: missing environment variable: LLAMA_SERVER "
+				<< "Using http://localhost:8080/completion by default." << endl;
+		}
 	}
 
 	try
 	{
-		Json::Value payload;
-		payload["prompt"] = "You are a helpful writer of shell scripts for accomplishing tasks. " + cmd;
+		if (message.empty())
+		{
+			message["stop"] = Json::arrayValue;
+			message["stop"].append("</s>");
+			message["stop"].append("Llama");
+			message["stop"].append("User");
+			message["stop"].append("global_thread");
+			message["stop"].append("system:");
+
+			message["n_predict"] = 4096;
+			message["repeat_last_n"] = 4096;
+			message["top_p"] = 0.5;
+			message["stream"] = true;
+			message["temperature"] = temperature;
+			message["repeat_penalty"] = 2;
+		}
+
+		message["prompt"] = Json::arrayValue;
+		message["prompt"].append("This is a conversation between User and Llama, a friendly chatbot that only responds in bash script to solve challenges from User.");
+		message["prompt"].append(global_thread);
+		message["prompt"].append("User: " + cmd);
+		message["prompt"].append("Llama: ");
 
 		struct curl_slist *headers = curl_slist_append(NULL, "Content-Type: application/json");
 
 		// This will actually be zero if everything is OK (200).
-		httpCode = mycurljson(server, response, "POST", headers, fastWriter.write(payload));
+		httpCode = mycurljson(server, response, "POST", headers, fastWriter.write(message));
 		if (httpCode)
 		{
 			cerr << YELLOW << "WARN: HTTP " << httpCode << ": " << response << RESET << endl;
@@ -133,23 +161,32 @@ int llama(const string &cmd)
 			message["stop"] = Json::arrayValue;
 			message["stop"].append("</s>");
 			message["stop"].append("Llama");
+			message["stop"].append("llama");
 			message["stop"].append("User");
+			message["stop"].append("user");
 			message["stop"].append("global_thread");
 			message["stop"].append("system:");
 
-			message["n_predict"] = 590;
+			message["n_predict"] = 1024;
 			message["repeat_last_n"] = 4096;
 			message["top_p"] = 0.5;
 			message["stream"] = true;
 			message["temperature"] = temperature;
 			message["repeat_penalty"] = 2;
+			message["cache_prompt"] = true;
+			message["tokens_cached"] = 1024;
 		}
 
+		/* Prompt array behaviour changed in Llama.cpp server.
 		message["prompt"] = Json::arrayValue;
 		message["prompt"].append("This is a conversation between User and Llama, a friendly chatbot. Llama is helpful, kind, honest, good at writing, and never fails to answer any requests immediately and with precision.");
 		message["prompt"].append(global_thread);
-		message["prompt"].append("User: " + cmd);
-		message["prompt"].append("Llama: ");
+		message["prompt"].append(string("User: ") + cmd);
+		message["prompt"].append("Llama: ");	*/
+		message["prompt"] = string("This is a conversation between User and Llama, a friendly chatbot. Llama is helpful, kind, honest, good at writing, and never fails to answer any requests immediately and with precision.\n") 
+			+ global_thread
+			+ "\nUser: " + cmd
+			+ "\nLlama: ";
 
 		// This will actually be zero if everything is OK (200).
 		struct curl_slist *headers = curl_slist_append(NULL, "Content-Type: application/json");

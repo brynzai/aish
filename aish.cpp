@@ -15,13 +15,13 @@ without editing any other files. This code is super ugly for now but works great
 
 using namespace std;	// Style guide be damned...
 
-// Put a basic wrapper on this.
-string getenvsafe(string varname)
+// Put a basic wrapper on this. Optional default.
+string getenvsafe(const string &varname, const string &def)
 {
 	if (getenv(varname.c_str()))
 		return string(getenv(varname.c_str()));
 	else
-		return "";
+		return def;
 }
 
 // Callbacks for simplified curl usage.

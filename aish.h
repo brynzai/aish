@@ -43,7 +43,7 @@ extern float temperature;
 
 // Map of plugins to functions (currently not using OOP)
 
-std::string getenvsafe(std::string varname);
+std::string getenvsafe(const std::string &varname, const std::string &def = "");
 size_t standard_callback(const char* in, size_t size, size_t num, char* out);
 
 // Added optional function pointer to handler for asynch streaming requests.
