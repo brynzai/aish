@@ -105,7 +105,7 @@ int shellbard(const string &cmd)
 }
 
 // Simple chat with bard.
-int bard(const string &cmd)
+int chatbard(const string &cmd)
 {
 	// A static running thread of the chat history.
 	static Json::Reader reader;
@@ -156,7 +156,9 @@ int bard(const string &cmd)
 		// As of 16-JUL-2023, this only seems to be available in us-central1
 		string url = "https://us-central1-aiplatform.googleapis.com/v1/projects/" 
 			+ getenvsafe("CLOUDSDK_CORE_PROJECT")
-			+ "/locations/us-central1/publishers/google/models/chat-bison:predict";
+			+ "/locations/us-central1/publishers/google/models/"
+			+ getenvsafe("AISH_BARD_MODEL", "textembedding-gecko")
+			+ ":predict";
 		string bearer = "Authorization: Bearer " + getenvsafe("GOOGLE_APPLICATION_CREDENTIALS");
 
 		struct curl_slist *headers = curl_slist_append(NULL, bearer.c_str());
@@ -184,11 +186,12 @@ int bard(const string &cmd)
 // A brilliant TODO stub worthy of GenAI
 int chatgemini(const string &cmd)
 {
-	*logs << "Gemini isn't supported yet but will be as soon as it's released." << endl;
-	return 0;
+	// Just abstract the model for reusability.
+	setenv("AISH_BARD_MODEL", "gemini-pro", 1);
+	return chatbard(cmd);
 }
 
 // Register these functions as plugins.
-AishPlugin geminiPlugin("catgemini", chatgemini);
-AishPlugin bardPlugin("bard", bard);
+AishPlugin geminiPlugin("chatgemini", chatgemini);
+AishPlugin bardPlugin("chatbard", chatbard);
 AishPlugin shellbardPlugin("shellbard", shellbard);

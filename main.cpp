@@ -5,7 +5,11 @@
 //#define CURL_STATICLIB
 
 #include "aish.h"
-#include "ttsstream.h"
+
+#if AUDIO_MODE
+#include "tts_ostream.h"
+#include "whisper_buf.h"
+#endif
 
 #include <sstream>
 #include <fstream>
@@ -18,8 +22,8 @@
 
 using namespace std; // Sod the style guide.
 
-// Globals... so sue me?
 ostream *logs = &std::cout;
+const int cmdbufsize = 4096;
 
 // Paragraph mode parsing?
 // This implies IFS is a blank line.
@@ -35,10 +39,11 @@ void signals(int sig_num) {}
 int main (int argc, char **argv)
 {
 	int res;
+	char getbuf[cmdbufsize];
 	string cmd;
 	string stemp = getenvsafe("AISH_TEMP");
 	stringstream buffer;
-	istream *input = &cin;
+	istream *input = &std::cin;
 	ifstream scriptFile;
 	ofstream history;
 
@@ -48,7 +53,7 @@ int main (int argc, char **argv)
 	if (stemp != "")
 		temperature = stof(stemp);
 
-    while(true)
+    while (true)
     {
         // note the colon (:) to indicate that 'b' has a parameter and is not a switch
         switch(getopt(argc, argv, "m:dhpvxac?"))
@@ -87,6 +92,7 @@ int main (int argc, char **argv)
 			#ifdef AUDIO_MODE
 			// Set logs to a Festival text to speech ostream.
 			logs = new ostream(new TTSBuf);
+			input = new istream(new WhisperBuf);
 			#else
 			cerr << "WARN: this build does not support Festival text to speech." << endl;
 			#endif
@@ -126,7 +132,6 @@ List of plugins supported by this build:)USAGE" << endl;
 				<< endl << "touch ~/.aish/accept to hide this in the future." << RESET << endl;
 		}
 	}
-
 	
 	// Did we specify a file after args?
 	if (optind < argc)
@@ -156,13 +161,18 @@ List of plugins supported by this build:)USAGE" << endl;
 	history.open(getenvsafe("HOME") + "/.aish/aish_history");
 	
 	if (ps1.length())
-		ps1 = YELLOW+mode+"🙂"+RESET+"> ";
+		ps1 = YELLOW + mode + "🙂" + RESET + "> ";
 	cout << ps1 << flush;
 
-	while (getline(*input, cmd))
+	while (input)
 	{
+		input->getline(getbuf, cmdbufsize);
+		cmd = getbuf;
+		//if (!input->eof())
+		//	continue;
+
 		// Trim white space and comment. Escape quotes.
-		cmd = regex_replace(cmd, (regex)"^\\s+|\\s+$|\\s*#.*$", "");
+		cmd = regex_replace(cmd, regex("^\\s+|\\s+$|\\s*#.*$"), "");
 		cmd = regex_replace(cmd, regex("\""), "\\\"");
 
 		// Live mode switch feature (group chat)
@@ -247,9 +257,9 @@ List of plugins supported by this build:)USAGE" << endl;
 				continue;
 			}
 		}
-		#if DEBUG
+		if (debug)
 			cerr << "global_thread: " << global_thread << endl;
-		#endif
+		
 		cout << ps1;
 	}
 
