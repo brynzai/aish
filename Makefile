@@ -1,9 +1,10 @@
-CC = g++
-CFLAGS += -std=c++11 -Wall -O3 -I/usr/include/speech_tools
-LIBS = -ljsoncpp -lcurl -lestools -lestbase -leststring -lasound -lncurses
-SRC := $(wildcard *.cpp plugins/*.cpp) 
-HDR := $(wildcard *.h)
-OBJ := $(SRC:.cpp=.o)
+CC		= g++
+CFLAGS		+= -std=c++11 -Wall -O3 -I/usr/include/speech_tools
+LIBS		= -ljsoncpp -lcurl
+LIBSAUDIO	= $(LIBS) -lestools -lestbase -leststring -lasound -lncurses
+SRC		:= $(wildcard *.cpp plugins/*.cpp)
+HDR		:= $(wildcard *.h)
+OBJ		:= $(SRC:.cpp=.o)
 
 all: aish
 
@@ -11,7 +12,7 @@ all: aish
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 aish: $(OBJ)
-	$(CC) -DAUDIO_MODE -o $@ $(CFLAGS) $(OBJ) $(LIBS) /usr/lib64/libFestival.a
+	$(CC) -DAUDIO_MODE -o $@ $(CFLAGS) $(OBJ) $(LIBSAUDIO)
 
 aish_without_audio: $(OBJ)
 	$(CC) -o aish $(CFLAGS) $(OBJ) $(LIBS)
