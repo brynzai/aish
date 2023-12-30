@@ -1,7 +1,7 @@
 CC		= g++
 CFLAGS		+= -std=c++11 -Wall -O3 -I/usr/include/speech_tools
 LIBS		= -ljsoncpp -lcurl
-LIBSAUDIO	= $(LIBS) -lestools -lestbase -leststring -lasound -lncurses
+LIBSAUDIO	= $(LIBS) -lestools -lestbase -leststring -lasound -lncurses /usr/lib64/libFestival.a
 SRC		:= $(wildcard *.cpp plugins/*.cpp)
 HDR		:= $(wildcard *.h)
 OBJ		:= $(SRC:.cpp=.o)
