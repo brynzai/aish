@@ -1,4 +1,4 @@
-n# In honor of Seth Vidal https://www.redhat.com/it/blog/thank-you-seth-vidal
+# In honor of Seth Vidal https://www.redhat.com/it/blog/thank-you-seth-vidal
 
 Name:           aish
 Version:        0.2.2
