@@ -34,7 +34,7 @@ string global_thread = "This is a conversation between user and one or more chat
 	mode = "shellbard";
 
 // Ignore signals for now.
-void signals(int sig_num) {}
+void ignore_signals(int sig_num) {}
 
 int main (int argc, char **argv)
 {
@@ -48,7 +48,7 @@ int main (int argc, char **argv)
 	ofstream history;
 
 	// Ignore ^C SIGINT for now.
-	//signal(SIGINT, signals);
+	signal(SIGINT, ignore_signals);
 
 	if (stemp != "")
 		temperature = stof(stemp);
