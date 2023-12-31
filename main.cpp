@@ -48,7 +48,7 @@ int main (int argc, char **argv)
 	ofstream history;
 
 	// Ignore ^C SIGINT for now.
-	signal(SIGINT, signals);
+	//signal(SIGINT, signals);
 
 	if (stemp != "")
 		temperature = stof(stemp);
