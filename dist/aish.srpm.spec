@@ -25,7 +25,7 @@ this at your own risk and not in production. AI can produce unexpected results.
 
 %build
 # Try with AUDIO_MODE first. BuildRequires still fails if festivel-devel isn't available.
-make -j ENV_CFLAGS="-DAUDIO_MODE" aish || make clean &&  make -j aish_without_audio
+ENV_CFLAGS="-DAUDIO_MODE" make -j || make clean &&  make -j aish_without_audio
 
 %install
 mkdir -p %{buildroot}%{_bindir}/
