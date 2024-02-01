@@ -12,8 +12,6 @@
 
 using namespace std;	// Style guide be damned...
 
-const string gpturl = "https://api.openai.com/v1/chat/completions";
-
 // Basic helper to append a message to a thread.
 void gptappend(Json::Value &thread, const string &role, const string &message)
 {
@@ -30,6 +28,7 @@ int shellgpt(const string &cmd)
 	Json::FastWriter fastWriter;
 	static string apiorg = getenvsafe("OPENAI_ORG");
     static string apikey = getenvsafe("OPENAI_API_KEY");
+	static string gpturl = getenvsafe("OPENAI_ENDPOINT", "https://api.openai.com/v1/chat/completions");
 	string sname;
 
     unsetenv("OPENAI_API_KEY");
@@ -40,7 +39,7 @@ int shellgpt(const string &cmd)
 			Json::Value history;
 			history["role"] = "system";
 			
-			thread["model"] = "gpt-3.5-turbo";
+			thread["model"] = getenvsafe("OPENAI_MODEL", "gpt-3.5-turbo");
 			thread["temperature"] = temperature;
 			thread["messages"] = Json::arrayValue;
 			thread["messages"].append(history);
@@ -98,6 +97,11 @@ int chatgpt(const string &cmd)
 	Json::FastWriter fastWriter;
 	static string apiorg = getenvsafe("OPENAI_ORG");
     static string apikey = getenvsafe("OPENAI_API_KEY");
+	static string gpturl = getenvsafe("OPENAI_ENDPOINT", "https://api.openai.com/v1/chat/completions");
+
+	// Default endpoint.
+	if (gpturl.empty())
+		gpturl = "https://api.openai.com/v1/chat/completions";
 
     unsetenv("OPENAI_API_KEY");
 	try
@@ -107,7 +111,7 @@ int chatgpt(const string &cmd)
 			Json::Value history;
 			history["role"] = "system";
 
-			thread["model"] = "gpt-3.5-turbo";
+			thread["model"] = getenvsafe("OPENAI_MODEL", "gpt-3.5-turbo");
 			thread["temperature"] = temperature;
 			thread["messages"] = Json::arrayValue;
 			thread["messages"].append(history);
@@ -121,7 +125,6 @@ int chatgpt(const string &cmd)
 		headers = curl_slist_append(headers, "Content-Type: application/json");
 
 		string payload = fastWriter.write(thread);
-		// cout << payload << endl;
 
 		int httpCode = mycurljson(gpturl, response, "POST", headers, payload);
 		if (httpCode)
