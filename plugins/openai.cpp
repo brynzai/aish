@@ -39,7 +39,7 @@ int shellgpt(const string &cmd)
 			Json::Value history;
 			history["role"] = "system";
 			
-			thread["model"] = getenvsafe("OPENAI_MODEL", "gpt-3.5-turbo");;
+			thread["model"] = getenvsafe("OPENAI_MODEL", "gpt-3.5-turbo");
 			thread["temperature"] = temperature;
 			thread["messages"] = Json::arrayValue;
 			thread["messages"].append(history);
@@ -111,7 +111,7 @@ int chatgpt(const string &cmd)
 			Json::Value history;
 			history["role"] = "system";
 
-			thread["model"] = getenvsafe("OPENAI_MODEL", "https://api.openai.com/v1/chat/completions");
+			thread["model"] = getenvsafe("OPENAI_MODEL", "gpt-3.5-turbo");
 			thread["temperature"] = temperature;
 			thread["messages"] = Json::arrayValue;
 			thread["messages"].append(history);
